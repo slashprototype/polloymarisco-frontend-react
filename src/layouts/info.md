@@ -1,0 +1,1 @@
+# Layout components wrapping pages or sections

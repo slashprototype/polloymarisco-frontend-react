@@ -1,0 +1,34 @@
+#components-layout-demo-responsive .logo {
+    height: 32px;
+    margin: 16px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .site-layout-sub-header-background {
+    background: #fff;
+  }
+  
+  .site-layout-background {
+    background: #fff;
+  }
+  .content-layout{
+    padding: 24px;
+    height: calc(100vh - 192px);
+    overflow: auto;
+  }
+
+  .size-sider{
+    min-height: 100vh;
+    min-width: 128px;
+    width: 130px !important;
+    max-width: 170px !important;
+  }
+
+  .menu-container{
+    margin-top:40px;
+    color: palevioletred;
+  }
+
+  .btn-exit{
+    float: inline-end;
+  }
