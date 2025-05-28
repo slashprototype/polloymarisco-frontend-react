@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Bar } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
@@ -18,6 +19,7 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend
@@ -100,23 +102,19 @@ const ChartMoreSell = (props) => {
       nameList.push(productsName[i].name);
     }
   } */
- let _quallity = {
-   good: 0,
-   bad: 0,
-   regular: 0
- };
- for(let i = 0 ; i < props.salesTickets.length; i++){
-    console.debug('Service quality [chartMoreSell]: ', props.salesTickets[i].service_quality);
-    if (props.salesTickets[i].service_quality == 'GOOD') {
-      _quallity.good = _quallity.good + 1;
-    } else if (props.salesTickets[i].service_quality == 'BAD') {
-      _quallity.bad = _quallity.bad + 1;
-    } else if (props.salesTickets[i].service_quality == 'REGULAR') {
-      _quallity .regular = _quallity.regular + 1;
-    }
 
- }
- console.debug('>>>>>Service quality [chartMoreSell]: ', _quallity);
+ let sellersMap = {};
+ props.salesTickets.forEach(({ seller, service_quality }) => {
+  console.debug('Seller: ', seller, 'Quality: ', service_quality);
+    if (!sellersMap[seller]) {
+      sellersMap[seller] = { good: 0, bad: 0, regular: 0 };
+    }
+    if (service_quality === 'GOOD') sellersMap[seller].good += 1;
+    if (service_quality === 'BAD') sellersMap[seller].bad += 1;
+    if (service_quality === 'REGULAR') sellersMap[seller].regular += 1;
+  });
+
+console.debug('>>>>>>> Service quality SellerMap[chartMoreSell]: ', sellersMap);
  console.debug('Products name [chartMoreSell]: ', productsName);
   const data = {
   labels:topProducts.map(p => `Producto ${p.product_id}`),
@@ -146,14 +144,37 @@ const ChartMoreSell = (props) => {
       }
     };
 
+    // Convertir el map a un array de gráficos
+  const sellerCharts = Object.entries(sellersMap).map(([sellerId, counts]) => {
+    const chartData = {
+      labels: ['Good', 'Bad', 'Regular'],
+      datasets: [
+        {
+          data: [counts.good, counts.bad, counts.regular],
+          backgroundColor: ['#4CAF50', '#F44336', '#FFC107'],
+          hoverOffset: 4,
+        },
+      ],
+    };
+
+    return (
+      <div key={sellerId} style={{ width: 300, margin: 20 }}>
+        <h3>Seller {sellerId}</h3>
+        <Pie data={chartData} />
+      </div>
+    );
+  });
+
 
   //console.debug('Products by ID[productsSells]: ', productsSells);
   //console.debug('Products name [chartMoreSell]: ', productsName);
 
   return (
   <div className="chart-container" >
-
+    
     <Bar data={data} options={options} />
+
+    <div style={{ display: 'flex', flexWrap: 'wrap' }}>{sellerCharts} </div>
   </div>
 );
 }
