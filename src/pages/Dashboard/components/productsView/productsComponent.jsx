@@ -8,7 +8,7 @@ const path = 'https://www.polloymariscoezm.com';
 
 const ProductsComponent = (props) => {
 
-    console.debug('Props received', props);
+    //console.debug('Props received', props);
     const pathImage = path+props.productData.image;
     const [showInfo, setShowInfo] = React.useState(false);
     const [productName, setProductName] = React.useState(props.productData.name);

@@ -24,7 +24,7 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 
-import { getSalesSummary } from "../../services/salesService";
+import { getSalesSummary, getSalesTickets } from "../../services/salesService";
 // import components child
 import ProductsComponent from "./components/productsView/productsComponent";
 import ChartMoreSell from "./components/chartMoreSell";
@@ -46,18 +46,38 @@ const DashboardPage = () => {
   
 
   const [startDate, setStartDate] = useState(dayjs());
+
+  //console.debug("====Start date:", startDate);
   const [endDate, setEndDate] = useState(dayjs());
   const [sales, setSales] = useState();
   const [totalAmount, setTotalAmount] = useState(0); // total sells
+  const [salesTickets, setSalesTickets] = useState();
 
 
   const handleUpdate = () => {
     updateSharedData("Updated Data");
   };
 
-  const onSelectDate = (date, dateString) => {
-    console.log(date, dateString);
-  };
+  const handleChangeDate = (which, date, dateString) => {
+  console.debug("Change date:", which, "Date:", date,);
+  //console.debug("Selected date:", date, "Date string:", dateString);
+  let dateFormat;
+  if (date !== null) {
+    const year = date.year();
+    const month = date.month() ; // 👈 IMPORTANTE: sumar 1
+    const day = date.date();
+
+    console.log(`Fecha: ${year}-${month+1}-${day}`);
+    dateFormat = `${year}-${month}-${day}`;
+  
+  }
+  if (which === "startDate") {
+    setStartDate(date);
+  }
+  else if (which === "endDate") {
+    setEndDate(date);
+  }
+};
   const getSales = async (params) => {
     try {
       let data = await getSalesSummary(params);
@@ -71,8 +91,26 @@ const DashboardPage = () => {
       throw new Error("Failed to get sales summary");
     }
   };
+
+  const getTickets = async (params) => {
+    //console.debug("Params to get tickets [Dashboard]: ", params);
+    try {
+      let data = await getSalesTickets(params);
+      setSalesTickets(data);
+      console.debug("%%%% Response products tickets [Dashboard]: ", data);
+    } catch (error) {
+      //throw new Error("Failed to get sales tickets");
+      console.error("Failed to get sales tickets [Dashboard]:", error);
+    }
+  }
   useEffect(() => {
+
+    // Necesario para que se actualice el valor de startDate y endDate y formatear
+    //handleChangeDate('startDate', startDate);
+    //handleChangeDate('endDate', endDate);
     getSales({ startDate: startDate, endDate: endDate });
+    getTickets({ startDate: startDate, endDate: endDate });
+
   }, [startDate, endDate]);
 
   setTimeout(() => {
@@ -83,7 +121,7 @@ const DashboardPage = () => {
       currency: 'MXN',
       }).format(parseFloat(totalAmount));
       setTotalAmount(formatted);
-      
+      console.debug("Sales tickets [Dashboard]: ", salesTickets);
     }
   }, 2000);
 
@@ -114,7 +152,7 @@ const DashboardPage = () => {
           <DatePicker
             //onChange={onSelectDate}
             value={endDate}
-            onChange={setEndDate}
+            onChange={(date)=>handleChangeDate('endDate', date, date)}
             format="YYYY-MM-DD"
           />
           <h3> PC 1</h3>
@@ -191,7 +229,7 @@ const DashboardPage = () => {
       <Row>
         {!waitToPlot && (
           <Col span={12}>
-            <ChartMoreSell sales={sales} />
+            <ChartMoreSell sales={sales} salesTickets={salesTickets} />
           </Col>
         )}
 

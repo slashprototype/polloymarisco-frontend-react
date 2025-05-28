@@ -80,14 +80,16 @@ const ChartMoreSell = (props) => {
       throw new Error("Failed to get products");
     }
   }
+
+
   useEffect(() => {
     if (!hasFetched.current) {
       hasFetched.current = true; // try no repeat runs
       
-      for (let i = 0; i < topProducts.length; i++) {
+    /*   for (let i = 0; i < topProducts.length; i++) {
         //setProducts(prevProducts => [...prevProducts,  getProductByIds(topProducts[i].product_id)]);
         getProductByIds(topProducts[i].product_id)
-      }
+      } */
     }
   }, []);
 
@@ -98,6 +100,24 @@ const ChartMoreSell = (props) => {
       nameList.push(productsName[i].name);
     }
   } */
+ let _quallity = {
+   good: 0,
+   bad: 0,
+   regular: 0
+ };
+ for(let i = 0 ; i < props.salesTickets.length; i++){
+    console.debug('Service quality [chartMoreSell]: ', props.salesTickets[i].service_quality);
+    if (props.salesTickets[i].service_quality == 'GOOD') {
+      _quallity.good = _quallity.good + 1;
+    } else if (props.salesTickets[i].service_quality == 'BAD') {
+      _quallity.bad = _quallity.bad + 1;
+    } else if (props.salesTickets[i].service_quality == 'REGULAR') {
+      _quallity .regular = _quallity.regular + 1;
+    }
+
+ }
+ console.debug('>>>>>Service quality [chartMoreSell]: ', _quallity);
+ console.debug('Products name [chartMoreSell]: ', productsName);
   const data = {
   labels:topProducts.map(p => `Producto ${p.product_id}`),
   //labels: nameList,

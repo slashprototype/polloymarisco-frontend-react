@@ -22,24 +22,66 @@ export const getSalesSummary = async(data)=>{
 //**v1/sales-summary/?end_date=2025-05-21&start_date=2025-05-01'
     */
     try{
-        //console.debug('==> Params:', data.startDate);
+        //console.debug('==> Params [getSalesSummary]:', data.startDate);
         let args='';
         if(data.startDate !== undefined || data.endDate !== undefined){
             //console.debug('Date to filter on service');
-            let sd = data.startDate.$y + '-' + data.startDate.$M + '-' + data.startDate.$D;
-            let ed = data.endDate.$y + '-' + data.endDate.$M + '-' + data.endDate.$D;
+            let sd = data.startDate.$y + '-' + (data.startDate.$M +1)+ '-' + data.startDate.$D;
+            let ed = data.endDate.$y + '-' + (data.endDate.$M +1)+ '-' + data.endDate.$D;
             //console.debug('Start date: ', sd);
             //console.debug('End date: ', ed);
             args = '?end_date=' + ed + '&start_date=' + sd;
-           
+           //console.debug('Args on service summary: ', args);
         }
 
         const response = await api.get('/api/v1/sales-summary/'+args, {
             params: data
         });
-        console.debug('Res summary on Service: ', response.data);
+        //console.debug('Res summary on Service: ', response.data);
         return response.data;
     }catch(error){
-        throw new Error('Failed to get products');
+        //throw new Error('Failed to get products');
+        console.error('Failed to get Sales :', error);
     }
 };
+
+export const getSalesTickets = async(data)=>{
+    /* !
+    {
+  *"startDate": "2025-05-21T20:11:37.835Z",
+  *"endDate": "2025-05-21T20:11:37.835Z"
+  * solo poner fechasa ademas de que solo estaan dos vendedores
+}
+    */
+   //console.debug('==> on service tickets', data);
+    try{
+        
+        let args='';
+        if(data.startDate !== undefined || data.endDate !== undefined){
+            let month;
+            //console.debug('Date to filter on service');
+            if(data.startDate.$M < 10){
+                month = '0' + (data.startDate.$M + 1);
+            }
+            if(data.endDate.$M < 10){
+                month = '0' + (data.endDate.$M + 1);
+            }
+            //console.debug('Start date: ', data.startDate);
+            let sd = data.startDate.$y + '-' + month +'-' + data.startDate.$D;
+            let ed = data.endDate.$y + '-' + month + '-' + data.endDate.$D;
+            //console.debug('Start date: ', sd);
+            //console.debug('End date: ', ed);
+            args = '?end_date=' + ed + '&start_date=' + sd;
+           
+        }
+        //console.debug('Args on service tickets: ', args);
+        const response = await api.get('/api/v1/sales-tickets/'+args, {
+            params: data
+        });
+        console.debug('Res tickets on Service: ', response.data);
+        return response.data;
+    }catch(error){
+        //throw new Error('Failed to get products');
+        console.error('Failed to get Sales Tickets', error);
+    }
+}

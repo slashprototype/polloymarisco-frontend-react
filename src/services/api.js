@@ -22,7 +22,7 @@ api.interceptors.request.use(
         //bearer.replace('"', '');
         //console.debug('Bearer:', bearer);
         config.headers.Authorization = bearer;
-      }//console.debug("Returning interceptor configuration: ", config);
+      }//console.debug("Returning interceptor configuration: ", config.url);
       return config;
     },
     (error) => {
