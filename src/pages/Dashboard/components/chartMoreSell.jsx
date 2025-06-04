@@ -13,6 +13,8 @@ import {
 
 
 import { getProductById } from "../../../services/productService";
+import { getTopProductsByType } from "../../../utils/topProductsByType";
+import TopProductsChart from "./topProductsChart";
 
 
 ChartJS.register(
@@ -42,6 +44,13 @@ const options = {
   },
 };
 
+const productType = {
+  weight_based: "Kg",
+  unit_based: "Unidades",
+  packaged: "Paquete",
+  piece_based: "Piezas",
+}
+
 const params = {
   'end_date': '2025-03-28',
   'start_date': '2025-03-01',
@@ -64,6 +73,9 @@ const ChartMoreSell = (props) => {
   }))
   .sort((a, b) => b.total_quantity - a.total_quantity)
   .slice(0, 10) : [];
+
+  const resultProducts = getTopProductsByType(props.salesTickets);
+  console.debug('=== %% Top Result products by type [chartMoreSell]: ', resultProducts);
 
 /*   if(props.sales === undefined){
     topProducts = props.sales.details.map(p => ({
@@ -192,6 +204,16 @@ const ChartMoreSell = (props) => {
     <Bar data={data} options={options} />
 
     <div style={{ display: 'flex', flexWrap: 'wrap' }}>{sellerCharts} </div>
+    <TopProductsChart
+      title="Top 10 productos más y menos vendidos (Kg)"
+      mostSold={resultProducts.weight_based.topLeastSold}
+      leastSold={resultProducts.weight_based.topMostSold}
+    />
+    <TopProductsChart
+      title="Top 10 productos más y menos vendidos (Piezas)"
+      mostSold={resultProducts.packaged.topLeastSold}
+      leastSold={resultProducts.packaged.topMostSold}
+    />
   </div>
 );
 }
