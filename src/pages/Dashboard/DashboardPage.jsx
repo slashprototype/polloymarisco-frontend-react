@@ -14,7 +14,8 @@ import {
   Col,
   Row,
   DatePicker,
-  Statistic
+  Statistic,
+  Spin
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -28,10 +29,17 @@ import { getSalesSummary, getSalesTickets } from "../../services/salesService";
 // import components child
 import ProductsComponent from "./components/productsView/productsComponent";
 import ChartMoreSell from "./components/chartMoreSell";
-
+// import styles    
 const { Title, Text } = Typography;
 const path = "https://www.polloymariscoezm.com/";
-const textToolTipAddTask = <span>Add Task</span>;
+
+const formatDate =(date)  => {
+  if (dayjs(date).isValid()) {
+    return dayjs(date).format("YYYY-MM-DD");
+  }
+  return undefined;
+};
+
 
 /* 
   Total aamount ess el totaal de venta en pesos
@@ -41,7 +49,7 @@ const textToolTipAddTask = <span>Add Task</span>;
 */
 const DashboardPage = () => {
   const [searchText, setSearchText] = useState("");
-  const { sharedData, updateSharedData } = useOutletContext(); // receive data Products
+  const { sharedData, updateSharedData, sellers } = useOutletContext(); // receive data Products
   const [waitToPlot, setWaitToPlot] = useState(true);
   
 
@@ -59,7 +67,7 @@ const DashboardPage = () => {
   };
 
   const handleChangeDate = (which, date, dateString) => {
-  console.debug("Change date:", which, "Date:", date,);
+  //console.debug("Change date:", which, "Date:", date,);
   //console.debug("Selected date:", date, "Date string:", dateString);
   let dateFormat;
   if (date !== null) {
@@ -81,14 +89,15 @@ const DashboardPage = () => {
   const getSales = async (params) => {
     try {
       let data = await getSalesSummary(params);
-      console.debug("Response products summary [Dashboard]: ", data);
+      //console.debug("Response products summary [Dashboard]: ", data);
       setSales(data);
       setTotalAmount(data.total_amount);
       //! Se esta generando problema al hacer el setSales
       //console.debug("Sales [Dashboard]:", sales);
       //setProductSells(sales.details);
     } catch (error) {
-      throw new Error("Failed to get sales summary");
+  
+      console.error("Failed to get sales summary [Dashboard]:", error);
     }
   };
 
@@ -97,9 +106,9 @@ const DashboardPage = () => {
     try {
       let data = await getSalesTickets(params);
       setSalesTickets(data);
-      console.debug("%%%% Response products tickets [Dashboard]: ", data);
+      //console.debug("%%%% Response products tickets [Dashboard]: ", data);
     } catch (error) {
-      //throw new Error("Failed to get sales tickets");
+
       console.error("Failed to get sales tickets [Dashboard]:", error);
     }
   }
@@ -108,8 +117,13 @@ const DashboardPage = () => {
     // Necesario para que se actualice el valor de startDate y endDate y formatear
     //handleChangeDate('startDate', startDate);
     //handleChangeDate('endDate', endDate);
-    getSales({ startDate: startDate, endDate: endDate });
-    getTickets({ startDate: startDate, endDate: endDate });
+    const data = {
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      from: 'DashboardPage'
+    }
+    getSales(data);
+    getTickets(data);
 
   }, [startDate, endDate]);
 
@@ -121,7 +135,7 @@ const DashboardPage = () => {
       currency: 'MXN',
       }).format(parseFloat(totalAmount));
       setTotalAmount(formatted);
-      console.debug("Sales tickets [Dashboard]: ", salesTickets);
+      //console.debug("Sales tickets [Dashboard]: ", salesTickets);
     }
   }, 2000);
 
@@ -132,31 +146,32 @@ const DashboardPage = () => {
 
       <Row>
         <Col span={20}>
-          <Row className="row-products">
+          <Row className=" scroll-wrap">
             {sharedData.map((item) => (
               <ProductsComponent productData={item} startDate={startDate} endDate={endDate} />
             ))}
           </Row>
         </Col>
-        <Col span={4}>
-          <h3>Venta total</h3>
+        <Col span={4} >
+          <div className="floatDatePicker">
+<h3>Venta total</h3>
                   <Statistic value={totalAmount} valueStyle={{ color: '#3f8600' }} />
           <h3>Fecha inicio</h3>
           <DatePicker
             //onChange={onSelectDate}
             value={startDate}
             onChange={setStartDate}
-            format="YYYY-MM-DD"
+            
           />
           <h3>Fecha fin</h3>
           <DatePicker
             //onChange={onSelectDate}
             value={endDate}
             onChange={(date)=>handleChangeDate('endDate', date, date)}
-            format="YYYY-MM-DD"
+            
           />
           <h3> PC 1</h3>
-          <div style={{ paadding: "2px" }}>
+          <div style={{ paadding: "2px" }} >
             <Input
               addonBefore="Venta Total"
               type="text"
@@ -223,13 +238,22 @@ const DashboardPage = () => {
               }}
             />
           </div>
+
+          </div>
+          
         </Col>
       </Row>
               <br />  <br />
       <Row>
         {!waitToPlot && (
           <Col span={12}>
-            <ChartMoreSell sales={sales} salesTickets={salesTickets} />
+            {(sales !== undefined && salesTickets !== undefined && sellers !== undefined) ? (
+              <ChartMoreSell sales={sales} salesTickets={salesTickets} sellers={sellers} />
+            ) : (
+              <div style={{ textAlign: "center", padding: "20px" }}>
+                <Spin type="secondary">Cargando gráfico de ventas...</Spin>
+              </div>
+            )}
           </Col>
         )}
 

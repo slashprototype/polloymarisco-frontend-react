@@ -19,6 +19,7 @@ import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import "./main-layout.css";
 
 import { getProducts } from "../services/productService";
+import { getSellers } from "../services/sellersService";
 
 const { Header, Footer, Sider, Content } = Layout;
 
@@ -52,6 +53,7 @@ const MainLayoutComponent = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [sharedData, setSharedData] = useState([]);
   const [currentKey, setCurrentKey] = useState("seafood");
+  const [sellers, setSellers] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
   //console.log("Current key: ", currentKey);
 
@@ -61,7 +63,7 @@ const MainLayoutComponent = () => {
       product.category.toLowerCase().includes(category.toLowerCase())
     );
     setSharedData(filteredResult);
-    //console.log('Filtered products shared data: ',sharedData);
+    console.log('Filtered products shared data: ',sharedData);
 
   }
 
@@ -77,6 +79,14 @@ const MainLayoutComponent = () => {
     }
     
 };
+ const getAPISellers = async () => {
+    let data = await getSellers();
+    if (data !== undefined) {
+      //console.debug("====Data is not undefined", data);
+      setSellers(data);
+      console.debug("Response sellers// Al iniciar layout: ", data);
+    }
+  };
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -92,6 +102,7 @@ const MainLayoutComponent = () => {
     if (loading) {
       try {
         getAPIGetProducts();
+        getAPISellers();
         //filterProductsByCategory(currentKey);
         //setTimeout(() =>{filterProductsByCategory(currentKey)},2000);
       } catch (e) {
@@ -128,14 +139,17 @@ const MainLayoutComponent = () => {
       >
         <div className="logo" /> {/* Your logo or title */}
         <br />
-        <h2 style={{ textAlign: "center", color: "white" }}>Sucursal</h2>
+        <h2 style={{ textAlign: "center", color: "white" }}>Sucursal Plaza Caliza</h2>
         <br />
         <div className="logo" />
         <Menu
           className="menu-container"
           mode="inline"
           theme="dark"
-    
+            style={{
+              backgroundColor: ' #f1ede2', // fondo personalizado
+              color: '#rgb(71, 56, 17)',              // color del texto
+            }}
           onClick={(e) => {
             //console.debug("Click", e);
             setCurrentKey(e.key);
@@ -156,9 +170,9 @@ const MainLayoutComponent = () => {
               <Button type={location.pathname === "/dashboard" ? "primary" : "default"} style={{ marginLeft: "45px" }} onClick={() => {if (location.pathname !== "/dashboard") navigate("/dashboard")} }>
                 General
               </Button>
-              <Button type={location.pathname === "/dashboard/precios" ? "primary" : "default"} style={{ margin: "10px" }} onClick={() => {if (location.pathname !== "/dashboard/precios") navigate("/dashboard/precios")} }>
+              {/* <Button type={location.pathname === "/dashboard/precios" ? "primary" : "default"} style={{ margin: "10px" }} onClick={() => {if (location.pathname !== "/dashboard/precios") navigate("/dashboard/precios")} }>
                 Precios
-              </Button>
+              </Button> */}
             </Col>
             <Col span={4} style={{ textAlign: "right" }}>
               <Button type="primary" style={{ margin: "10px" }} onClick={onExit}>
@@ -185,7 +199,7 @@ const MainLayoutComponent = () => {
               </div>
             ) : (
               <div className="content-container">
-                <Outlet context={{ sharedData, updateSharedData }} />
+                <Outlet context={{ sharedData, updateSharedData, sellers }} />
               </div>
             )}
 

@@ -11,7 +11,7 @@ import {
   Legend,
 } from "chart.js";
 
-import { getSalesSummary } from "../../../services/salesService";
+
 import { getProductById } from "../../../services/productService";
 
 
@@ -51,14 +51,31 @@ const params = {
 
 const ChartMoreSell = (props) => {
   console.debug('Props received [chartMoreSell]: ', props);
-  const topProducts = props.sales.details.map(p => ({
+  const topProducts = props.sales ? props.sales.details.map(p => ({
+    product_id: p.product_id,
+    total_quantity: parseFloat(p.total_quantity)
+  }))
+  .sort((a, b) => b.total_quantity - a.total_quantity)
+  .slice(0, 5) : [];
+
+  const top10Products = props.sales ? props.sales.details.map(p => ({
+    product_id: p.product_id,
+    total_quantity: parseFloat(p.total_quantity)
+  }))
+  .sort((a, b) => b.total_quantity - a.total_quantity)
+  .slice(0, 10) : [];
+
+/*   if(props.sales === undefined){
+    topProducts = props.sales.details.map(p => ({
     product_id: p.product_id,
     total_quantity: parseFloat(p.total_quantity)
   }))
   .sort((a, b) => b.total_quantity - a.total_quantity)
   .slice(0, 5);
 
-  console.debug('Top products: ', topProducts);
+  } */
+
+  //console.debug('Top products: ', topProducts);
   
   //const [topProducts, setTopProducts] = useState();
   const [sales, setSales] = useState();
@@ -105,7 +122,7 @@ const ChartMoreSell = (props) => {
 
  let sellersMap = {};
  props.salesTickets.forEach(({ seller, service_quality }) => {
-  console.debug('Seller: ', seller, 'Quality: ', service_quality);
+  //console.debug('Seller: ', seller, 'Quality: ', service_quality);
     if (!sellersMap[seller]) {
       sellersMap[seller] = { good: 0, bad: 0, regular: 0 };
     }
@@ -114,18 +131,18 @@ const ChartMoreSell = (props) => {
     if (service_quality === 'REGULAR') sellersMap[seller].regular += 1;
   });
 
-console.debug('>>>>>>> Service quality SellerMap[chartMoreSell]: ', sellersMap);
- console.debug('Products name [chartMoreSell]: ', productsName);
+//console.debug('>>>>>>> Service quality SellerMap[chartMoreSell]: ', sellersMap);
+ //console.debug('Products name [chartMoreSell]: ', productsName);
   const data = {
   labels:topProducts.map(p => `Producto ${p.product_id}`),
   //labels: nameList,
   datasets: [
     {
       label: "Cantidad total vendida",
-      backgroundColor: "rgba(75,192,192,0.4)",
+      backgroundColor: "rgba(14, 199, 73, 0.89))",
       borderColor: "rgba(75,192,192,1)",
       borderWidth: 1,
-      hoverBackgroundColor: "rgba(75,192,192,0.6)",
+      hoverBackgroundColor: "rgb(44, 224, 170)",
       hoverBorderColor: "rgba(75,192,192,1)",
       data: topProducts.map(p => p.total_quantity),
     },

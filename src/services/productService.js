@@ -7,7 +7,8 @@ export const getProducts = async()=>{
         //console.debug('Response products [getProductsService]: ', response);
         return response.data;
     }catch(error){
-        throw new Error('Failed to get products');
+
+        console.error('Failed to get products (service): ', error);
     }
 };
 
@@ -17,7 +18,7 @@ export const getProductById = async(id)=>{
         console.debug('Res products by ID: [getProductByIdService]', response);
         return response.data;
     }catch(error){
-        //throw new Error('Failed to get products');
+
         console.error('Failed to get product by ID:', error);
     }
 };
