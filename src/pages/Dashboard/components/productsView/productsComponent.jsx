@@ -52,7 +52,7 @@ const ProductsComponent = (props) => {
     }, [props.startDate, props.endDate, props.productData.name]);
   return (
  
-      <Col span={5}>
+      <Col  xs={8} sm={12} md={8} lg={4} xl={3} style={{ margin: "12px" }}>
         <Card variant="borderless" className="card-product" style={{ width: "160px", maxHeight: "310px", minHeight: "280px", margin:"8px" }}         hoverable
         onClick={() => setShowInfo(!showInfo)}>
           <Statistic

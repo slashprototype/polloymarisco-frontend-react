@@ -11,9 +11,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 25px;
-  max-height: 500px;
+/*   max-height: 500px;
   max-width: 780px;
-  min-width: 700px;
+  min-width: 700px; */
   overflow-y: auto;
   padding: 5px;
   border: 1px solid #ccc;
@@ -35,5 +35,6 @@
   padding: 8px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-
+  transition: all 0.3s ease;
 }
+

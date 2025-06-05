@@ -15,7 +15,7 @@ import {
   Row,
   DatePicker,
   Statistic,
-  Spin
+  Spin,
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -24,22 +24,23 @@ import {
   UserOutlined,
   PlusCircleOutlined,
 } from "@ant-design/icons";
+import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { useMediaQuery } from "react-responsive";
 
 import { getSalesSummary, getSalesTickets } from "../../services/salesService";
 // import components child
 import ProductsComponent from "./components/productsView/productsComponent";
 import ChartMoreSell from "./components/chartMoreSell";
-// import styles    
+// import styles
 const { Title, Text } = Typography;
 const path = "https://www.polloymariscoezm.com/";
 
-const formatDate =(date)  => {
+const formatDate = (date) => {
   if (dayjs(date).isValid()) {
     return dayjs(date).format("YYYY-MM-DD");
   }
   return undefined;
 };
-
 
 /* 
   Total aamount ess el totaal de venta en pesos
@@ -48,10 +49,12 @@ const formatDate =(date)  => {
 
 */
 const DashboardPage = () => {
+  const isMobile = useMediaQuery({ maxWidth: 650 });
+  const [isMinimized, setIsMinimized] = useState(false);
+
   const [searchText, setSearchText] = useState("");
   const { sharedData, updateSharedData, sellers } = useOutletContext(); // receive data Products
   const [waitToPlot, setWaitToPlot] = useState(true);
-  
 
   const [startDate, setStartDate] = useState(dayjs());
 
@@ -61,31 +64,26 @@ const DashboardPage = () => {
   const [totalAmount, setTotalAmount] = useState(0); // total sells
   const [salesTickets, setSalesTickets] = useState();
 
-
   const handleUpdate = () => {
     updateSharedData("Updated Data");
   };
 
   const handleChangeDate = (which, date, dateString) => {
-  //console.debug("Change date:", which, "Date:", date,);
-  //console.debug("Selected date:", date, "Date string:", dateString);
-  let dateFormat;
-  if (date !== null) {
-    const year = date.year();
-    const month = date.month() ; // 👈 IMPORTANTE: sumar 1
-    const day = date.date();
-
-    console.log(`Fecha: ${year}-${month+1}-${day}`);
-    dateFormat = `${year}-${month}-${day}`;
-  
-  }
-  if (which === "startDate") {
-    setStartDate(date);
-  }
-  else if (which === "endDate") {
-    setEndDate(date);
-  }
-};
+    //console.debug("Change date:", which, "Date:", date,);
+    //console.debug("Selected date:", date, "Date string:", dateString);
+    let dateFormat;
+    if (date !== null) {
+      const year = date.year();
+      const month = date.month(); // 👈 IMPORTANTE: sumar 1
+      const day = date.date();
+      dateFormat = `${year}-${month}-${day}`;
+    }
+    if (which === "startDate") {
+      setStartDate(date);
+    } else if (which === "endDate") {
+      setEndDate(date);
+    }
+  };
   const getSales = async (params) => {
     try {
       let data = await getSalesSummary(params);
@@ -96,7 +94,6 @@ const DashboardPage = () => {
       //console.debug("Sales [Dashboard]:", sales);
       //setProductSells(sales.details);
     } catch (error) {
-  
       console.error("Failed to get sales summary [Dashboard]:", error);
     }
   };
@@ -108,31 +105,40 @@ const DashboardPage = () => {
       setSalesTickets(data);
       //console.debug("%%%% Response products tickets [Dashboard]: ", data);
     } catch (error) {
-
       console.error("Failed to get sales tickets [Dashboard]:", error);
     }
-  }
-  useEffect(() => {
+  };
 
+  // Minimizar automáticamente en móviles
+  useEffect(() => {
+    if (isMobile) {
+      console.debug("Minimizing on mobile view");
+      setIsMinimized(true);
+    } else {
+      console.debug("Restoring on desktop view");
+      setIsMinimized(false);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
     // Necesario para que se actualice el valor de startDate y endDate y formatear
     //handleChangeDate('startDate', startDate);
     //handleChangeDate('endDate', endDate);
     const data = {
       startDate: formatDate(startDate),
       endDate: formatDate(endDate),
-      from: 'DashboardPage'
-    }
+      from: "DashboardPage",
+    };
     getSales(data);
     getTickets(data);
-
   }, [startDate, endDate]);
 
   setTimeout(() => {
     if (waitToPlot) {
       setWaitToPlot(false);
-      const formatted = new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
+      const formatted = new Intl.NumberFormat("es-MX", {
+        style: "currency",
+        currency: "MXN",
       }).format(parseFloat(totalAmount));
       setTotalAmount(formatted);
       //console.debug("Sales tickets [Dashboard]: ", salesTickets);
@@ -142,113 +148,153 @@ const DashboardPage = () => {
   return (
     <div>
       <h3>Dashboard Page</h3>
-
-
       <Row>
         <Col span={20}>
-          <Row className=" scroll-wrap">
+          <Row
+            className=" scroll-wrap"
+            gutter={[10, 10]}
+            style={{ padding: "10px" }}
+          >
             {sharedData.map((item) => (
-              <ProductsComponent productData={item} startDate={startDate} endDate={endDate} />
+              <ProductsComponent
+                productData={item}
+                startDate={startDate}
+                endDate={endDate}
+              />
             ))}
           </Row>
         </Col>
-        <Col span={4} >
-          <div className="floatDatePicker">
-<h3>Venta total</h3>
-                  <Statistic value={totalAmount} valueStyle={{ color: '#3f8600' }} />
-          <h3>Fecha inicio</h3>
-          <DatePicker
-            //onChange={onSelectDate}
-            value={startDate}
-            onChange={setStartDate}
-            
-          />
-          <h3>Fecha fin</h3>
-          <DatePicker
-            //onChange={onSelectDate}
-            value={endDate}
-            onChange={(date)=>handleChangeDate('endDate', date, date)}
-            
-          />
-          <h3> PC 1</h3>
-          <div style={{ paadding: "2px" }} >
-            <Input
-              addonBefore="Venta Total"
-              type="text"
+        <Col span={4}>
+          <div
+            className="floatDatePicker"
+            style={{
+              top: isMobile ? "auto" : "110px",
+              bottom: isMobile ? "20px" : "auto",
+              padding: isMinimized ? "5px" : "10px",
+            }}
+          >
+            {!isMinimized && (
+              <div>
+                <h3>Venta total</h3>
+                <Statistic
+                  value={totalAmount}
+                  valueStyle={{ color: "#3f8600" }}
+                />
+                <h3>Fecha inicio</h3>
+                <DatePicker
+                  //onChange={onSelectDate}
+                  value={startDate}
+                  onChange={setStartDate}
+                />
+                <h4>Fecha fin</h4>
+                <DatePicker
+                  //onChange={onSelectDate}
+                  value={endDate}
+                  onChange={(date) => handleChangeDate("endDate", date, date)}
+                />
+                <h4> PC 1</h4>
+                <div style={{ paadding: "2px" }}>
+                  <Input
+                    addonBefore="Venta Total"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                  <Input
+                    addonBefore="Kilos"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                  <Input
+                    addonBefore="Unitario totales"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                  <h4>PC 2</h4>
+                  <Input
+                    addonBefore="Venta total"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                  <Input
+                    addonBefore="Kilos totales"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                  <Input
+                    addonBefore="Unitario totales"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                  <h4>PC 3</h4>
+                  <Input
+                    addonBefore="Venta total"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                  <Input
+                    addonBefore="Kilos totales"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                  <Input
+                    addonBefore="Unitario totales"
+                    type="text"
+                    style={{
+                      width: 180,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            <FloatButton
+              type="primary"
+              icon={
+                isMinimized ? (
+                  <MenuUnfoldOutlined />
+                ) : (
+                  <MenuFoldOutlined />
+                )
+              }
+              onClick={() => setIsMinimized(!isMinimized)}
               style={{
-                width: 180,
+                right: isMobile ? "20px" : "10px",
+                bottom: isMobile ? "20px" : "10px",
               }}
-            />
-            <Input
-              addonBefore="Kilos"
-              type="text"
-              style={{
-                width: 180,
-              }}
-            />
-            <Input
-              addonBefore="Unitario totales"
-              type="text"
-              style={{
-                width: 180,
-              }}
-            />
-            <h3>PC 2</h3>
-            <Input
-              addonBefore="Venta total"
-              type="text"
-              style={{
-                width: 180,
-              }}
-            />
-            <Input
-              addonBefore="Kilos totales"
-              type="text"
-              style={{
-                width: 180,
-              }}
-            />
-            <Input
-              addonBefore="Unitario totales"
-              type="text"
-              style={{
-                width: 180,
-              }}
-            />
-            <h3>PC 3</h3>
-            <Input
-              addonBefore="Venta total"
-              type="text"
-              style={{
-                width: 180,
-              }}
-            />
-            <Input
-              addonBefore="Kilos totales"
-              type="text"
-              style={{
-                width: 180,
-              }}
-            />
-            <Input
-              addonBefore="Unitario totales"
-              type="text"
-              style={{
-                width: 180,
-              }}
+              tooltip={
+                isMinimized ? "Expandir" : "Minimizar"
+              }
             />
           </div>
-
-          </div>
-          
         </Col>
       </Row>
-              <br />  <br />
-      <Row>
+      <br /> <br />
+      <Row span={20}>
         {!waitToPlot && (
           <Col span={12}>
-            {(sales !== undefined && salesTickets !== undefined && sellers !== undefined) ? (
-              <ChartMoreSell sales={sales} salesTickets={salesTickets} sellers={sellers} />
+            {sales !== undefined &&
+            salesTickets !== undefined &&
+            sellers !== undefined ? (
+              <ChartMoreSell
+                sales={sales}
+                salesTickets={salesTickets}
+                sellers={sellers}
+              />
             ) : (
               <div style={{ textAlign: "center", padding: "20px" }}>
                 <Spin type="secondary">Cargando gráfico de ventas...</Spin>
@@ -256,8 +302,6 @@ const DashboardPage = () => {
             )}
           </Col>
         )}
-
-        <Col span={12}>{/* <ChartMoreSell /> */}</Col>
       </Row>
     </div>
   );

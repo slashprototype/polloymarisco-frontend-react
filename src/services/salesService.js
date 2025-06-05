@@ -54,7 +54,7 @@ export const getSalesTickets = async(data)=>{
   * solo poner fechasa ademas de que solo estaan dos vendedores
 }
     */
-   console.debug('==> on service tickets', data);
+   //console.debug('==> on service tickets', data);
     try{
         
         let args='';

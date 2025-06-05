@@ -31,8 +31,8 @@ export const getTopProductsByType = (tickets) => {
   Object.keys(productSalesMap).forEach(type => {
     const products = Object.values(productSalesMap[type]);
     result[type] = {
-      topMostSold: [...products].sort((a, b) => b.quantity - a.quantity).slice(0, 10),
-      topLeastSold: [...products].sort((a, b) => a.quantity - b.quantity).slice(0, 10),
+      topMostSold: [...products].sort((a, b) => b.quantity - a.quantity).slice(0, 15),
+      topLeastSold: [...products].sort((a, b) => a.quantity - b.quantity).slice(0, 15),
     };
   });
 
