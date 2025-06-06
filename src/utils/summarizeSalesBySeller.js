@@ -7,10 +7,10 @@
  */
 export const summarizeSalesBySeller = (salesTickets, sellersData) => {
   const sellerSummaryMap = {};
-
+  console.debug("======Summarizing sales by seller...", sellersData);
   // Create a map of sellerId → name for quick lookup
   const sellerNameMap = sellersData.reduce((map, seller) => {
-    map[seller.id] = seller.name;
+    map[seller.id] = seller.username;
     return map;
   }, {});
 
@@ -28,7 +28,7 @@ export const summarizeSalesBySeller = (salesTickets, sellersData) => {
     }
 
     // Sum total amount
-    sellerSummaryMap[sellerId].totalAmount += ticket.total_amount || 0;
+    sellerSummaryMap[sellerId].totalAmount += parseFloat(ticket.total_amount) || 0;
 
     // Process each sale
     ticket.sales_details.forEach(sale => {

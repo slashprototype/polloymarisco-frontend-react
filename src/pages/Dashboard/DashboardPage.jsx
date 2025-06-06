@@ -16,6 +16,7 @@ import {
   DatePicker,
   Statistic,
   Spin,
+  Descriptions,
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -43,6 +44,11 @@ const formatDate = (date) => {
   return undefined;
 };
 
+const formatter = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+});
+
 /* 
   Total aamount ess el totaal de venta en pesos
   Filtrar por price_type y sumar los aaamount de menudeo, maayoreo, etc.
@@ -59,7 +65,7 @@ const DashboardPage = () => {
   const [waitToPlot, setWaitToPlot] = useState(true);
 
   const [startDate, setStartDate] = useState(dayjs());
-
+  const [salesSeller, setSalesSeller] = useState([]);
   const [endDate, setEndDate] = useState(dayjs());
   const [sales, setSales] = useState();
   const [totalAmount, setTotalAmount] = useState(0); // total sells
@@ -103,7 +109,6 @@ const DashboardPage = () => {
       let data = await getSalesTickets(params);
       setSalesTickets(data);
       //console.debug("%%%% Response products tickets [Dashboard]: ", data);
-      
     } catch (error) {
       console.error("Failed to get sales tickets [Dashboard]:", error);
     }
@@ -131,6 +136,14 @@ const DashboardPage = () => {
     getSales(data);
     getTickets(data);
   }, [startDate, endDate]);
+
+  useEffect(() => {
+    if (salesTickets && sellers) {
+      const summarized = summarizeSalesBySeller(salesTickets, sellers);
+      setSalesSeller(summarized);
+      console.debug("Sales summarized by seller [Dashboard]: ", summarized);
+    }
+  }, [salesTickets, sellers]);
 
   setTimeout(() => {
     if (waitToPlot) {
@@ -184,55 +197,20 @@ const DashboardPage = () => {
                   value={endDate}
                   onChange={(date) => handleChangeDate("endDate", date, date)}
                 />
-                <Divider style={{ marginBottom: "-10px" }}>
-                  <p style={{ fontSize: "12px" }}>PC 1</p>
-                </Divider>
+   
                 <div style={{ paadding: "2px" }}>
-                  <Input
-                    addonBefore="Venta Total"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
-                  <Input
-                    addonBefore="Kilos"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
-                  <Input
-                    addonBefore="Unitario totales"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
-                  <Divider style={{ marginBottom: "-10px" }}>
-                    <p style={{ fontSize: "12px" }}>PC 2</p>
-                  </Divider>
-                  <Input
-                    addonBefore="Venta total"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
-                  <Input
-                    addonBefore="Kilos totales"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
-                  <Input
-                    addonBefore="Unitario totales"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
+                  {salesSeller.map((sellerData) => (
+                    <div>
+                      <Divider style={{ marginBottom: "0px" }}>
+                       <Text strong>{sellerData.sellerName} </Text> 
+                      </Divider>
+                      
+                      <Text strong>Total Venta: </Text>
+                      {formatter.format(sellerData.totalAmount)} <br />
+                      <Text strong>Total Kilos: </Text>
+                      {sellerData.totalKilos.toFixed(3)} kg
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
