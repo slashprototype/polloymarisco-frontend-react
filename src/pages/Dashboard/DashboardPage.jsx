@@ -28,6 +28,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useMediaQuery } from "react-responsive";
 
 import { getSalesSummary, getSalesTickets } from "../../services/salesService";
+import { summarizeSalesBySeller } from "../../utils/summarizeSalesBySeller";
 // import components child
 import ProductsComponent from "./components/productsView/productsComponent";
 import ChartMoreSell from "./components/chartMoreSell";
@@ -54,11 +55,11 @@ const DashboardPage = () => {
 
   const [searchText, setSearchText] = useState("");
   const { sharedData, updateSharedData, sellers } = useOutletContext(); // receive data Products
+
   const [waitToPlot, setWaitToPlot] = useState(true);
 
   const [startDate, setStartDate] = useState(dayjs());
 
-  //console.debug("====Start date:", startDate);
   const [endDate, setEndDate] = useState(dayjs());
   const [sales, setSales] = useState();
   const [totalAmount, setTotalAmount] = useState(0); // total sells
@@ -69,8 +70,6 @@ const DashboardPage = () => {
   };
 
   const handleChangeDate = (which, date, dateString) => {
-    //console.debug("Change date:", which, "Date:", date,);
-    //console.debug("Selected date:", date, "Date string:", dateString);
     let dateFormat;
     if (date !== null) {
       const year = date.year();
@@ -104,10 +103,13 @@ const DashboardPage = () => {
       let data = await getSalesTickets(params);
       setSalesTickets(data);
       //console.debug("%%%% Response products tickets [Dashboard]: ", data);
+      
     } catch (error) {
       console.error("Failed to get sales tickets [Dashboard]:", error);
     }
   };
+
+  //console.debug("Shared data received [Dashboard]: ", sharedData);
 
   // Minimizar automáticamente en móviles
   useEffect(() => {
@@ -121,9 +123,6 @@ const DashboardPage = () => {
   }, [isMobile]);
 
   useEffect(() => {
-    // Necesario para que se actualice el valor de startDate y endDate y formatear
-    //handleChangeDate('startDate', startDate);
-    //handleChangeDate('endDate', endDate);
     const data = {
       startDate: formatDate(startDate),
       endDate: formatDate(endDate),
@@ -145,22 +144,15 @@ const DashboardPage = () => {
     }
   }, 2000);
 
+  //console.debug("Tickets sales [Dashboard]: ", salesTickets);
   return (
     <div>
       <h3>Dashboard Page</h3>
       <Row>
         <Col span={20}>
-          <Row
-            className=" scroll-wrap"
-            gutter={[10, 10]}
-            style={{ padding: "10px" }}
-          >
+          <Row className=" scroll-wrap" gutter={[10, 10]} style={{ padding: "10px" }}>
             {sharedData.map((item) => (
-              <ProductsComponent
-                productData={item}
-                startDate={startDate}
-                endDate={endDate}
-              />
+              <ProductsComponent productData={item} startDate={startDate} endDate={endDate} />
             ))}
           </Row>
         </Col>
@@ -175,24 +167,26 @@ const DashboardPage = () => {
           >
             {!isMinimized && (
               <div>
-                <h3>Venta total</h3>
+                <h4 style={{ marginBottom: "-4px" }}>Venta total</h4>
                 <Statistic
                   value={totalAmount}
-                  valueStyle={{ color: "#3f8600" }}
+                  valueStyle={{ color: "#3f8600", fontSize: "18px" }}
                 />
-                <h3>Fecha inicio</h3>
+                <h5 style={{ marginBottom: "1px" }}>Fecha inicio</h5>
                 <DatePicker
                   //onChange={onSelectDate}
                   value={startDate}
                   onChange={setStartDate}
                 />
-                <h4>Fecha fin</h4>
+                <h5 style={{ marginBottom: "1px" }}>Fecha fin</h5>
                 <DatePicker
                   //onChange={onSelectDate}
                   value={endDate}
                   onChange={(date) => handleChangeDate("endDate", date, date)}
                 />
-                <h4> PC 1</h4>
+                <Divider style={{ marginBottom: "-10px" }}>
+                  <p style={{ fontSize: "12px" }}>PC 1</p>
+                </Divider>
                 <div style={{ paadding: "2px" }}>
                   <Input
                     addonBefore="Venta Total"
@@ -215,29 +209,9 @@ const DashboardPage = () => {
                       width: 180,
                     }}
                   />
-                  <h4>PC 2</h4>
-                  <Input
-                    addonBefore="Venta total"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
-                  <Input
-                    addonBefore="Kilos totales"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
-                  <Input
-                    addonBefore="Unitario totales"
-                    type="text"
-                    style={{
-                      width: 180,
-                    }}
-                  />
-                  <h4>PC 3</h4>
+                  <Divider style={{ marginBottom: "-10px" }}>
+                    <p style={{ fontSize: "12px" }}>PC 2</p>
+                  </Divider>
                   <Input
                     addonBefore="Venta total"
                     type="text"
@@ -264,21 +238,13 @@ const DashboardPage = () => {
             )}
             <FloatButton
               type="primary"
-              icon={
-                isMinimized ? (
-                  <MenuUnfoldOutlined />
-                ) : (
-                  <MenuFoldOutlined />
-                )
-              }
+              icon={isMinimized ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setIsMinimized(!isMinimized)}
               style={{
                 right: isMobile ? "20px" : "10px",
                 bottom: isMobile ? "20px" : "10px",
               }}
-              tooltip={
-                isMinimized ? "Expandir" : "Minimizar"
-              }
+              tooltip={isMinimized ? "Expandir" : "Minimizar"}
             />
           </div>
         </Col>
@@ -287,14 +253,8 @@ const DashboardPage = () => {
       <Row span={20}>
         {!waitToPlot && (
           <Col span={12}>
-            {sales !== undefined &&
-            salesTickets !== undefined &&
-            sellers !== undefined ? (
-              <ChartMoreSell
-                sales={sales}
-                salesTickets={salesTickets}
-                sellers={sellers}
-              />
+            {sales !== undefined && salesTickets !== undefined && sellers !== undefined ? (
+              <ChartMoreSell sales={sales} salesTickets={salesTickets} sellers={sellers} />
             ) : (
               <div style={{ textAlign: "center", padding: "20px" }}>
                 <Spin type="secondary">Cargando gráfico de ventas...</Spin>

@@ -63,7 +63,7 @@ const MainLayoutComponent = () => {
       product.category.toLowerCase().includes(category.toLowerCase())
     );
     setSharedData(filteredResult);
-    console.log('Filtered products shared data: ',sharedData);
+    //console.log('Filtered products shared data: ',sharedData);
 
   }
 

@@ -1,7 +1,7 @@
 export const getTopProductsByType = (tickets) => {
   const productSalesMap = {};
 
-  console.debug('==> Filtering topProductsByType', tickets);
+  // Paso 1: Mapear productos vendidos por tipo
   tickets.forEach(ticket => {
     ticket.sales_details.forEach(sale => {
       const { product, quantity } = sale;
@@ -28,13 +28,24 @@ export const getTopProductsByType = (tickets) => {
 
   const result = {};
 
-  Object.keys(productSalesMap).forEach(type => {
-    const products = Object.values(productSalesMap[type]);
+  const allProductTypes = ['weight_based', 'packaged']; // Agrega otros tipos si es necesario
+  const defaultEntry = [{ name: "Sin datos", quantity: 0 }];
+
+  // Paso 2: Construir topMost y topLeast con fallback por tipo
+  allProductTypes.forEach(type => {
+    const products = productSalesMap[type]
+      ? Object.values(productSalesMap[type])
+      : [];
+
     result[type] = {
-      topMostSold: [...products].sort((a, b) => b.quantity - a.quantity).slice(0, 15),
-      topLeastSold: [...products].sort((a, b) => a.quantity - b.quantity).slice(0, 15),
+      topMostSold: products.length
+        ? [...products].sort((a, b) => b.quantity - a.quantity).slice(0, 15)
+        : defaultEntry,
+      topLeastSold: products.length
+        ? [...products].sort((a, b) => a.quantity - b.quantity).slice(0, 15)
+        : defaultEntry,
     };
   });
 
   return result;
-}
+};

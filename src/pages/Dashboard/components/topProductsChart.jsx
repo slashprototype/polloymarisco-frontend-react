@@ -17,7 +17,7 @@ const TopProductsChart = ({ title, mostSold, leastSold }) => {
 
   return (
     <div style={{ width: "150%", height: customHeight, marginTop: "40px" }}>
-      <h3 style={{ textAlign: "center" }}>{title}</h3>
+      <h4 style={{ textAlign: "center" }}>{title}</h4>
       <Bar
 
         data={{
