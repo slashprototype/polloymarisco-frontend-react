@@ -4,20 +4,17 @@ import { useOutletContext } from "react-router-dom";
 
 import {
   Button,
-  Input,
   Typography,
   Divider,
   Card,
-  Space,
   FloatButton,
-  Tooltip,
   Col,
   Row,
   DatePicker,
   Statistic,
   Spin,
-  Descriptions,
   message,
+  Modal,
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -59,7 +56,7 @@ const formatter = new Intl.NumberFormat("es-MX", {
 const DashboardPage = () => {
   const isMobile = useMediaQuery({ maxWidth: 650 });
   const [isMinimized, setIsMinimized] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const { sharedData, updateSharedData, sellers } = useOutletContext(); // receive data Products
 
@@ -79,30 +76,18 @@ const DashboardPage = () => {
 
   const handleChangeDate = (which, date) => {
     if (!date || !dayjs(date).isValid()) return;
-
     const normalizedDate = dayjs(date).startOf("day");
     const normalizedStart = startDate ? dayjs(startDate).startOf("day") : null;
     const normalizedEnd = endDate ? dayjs(endDate).startOf("day") : null;
-    console.debug("Normalized date [Dashboard]: ", normalizedDate.format("YYYY-MM-DD"));
-    console.debug(
-      "Normalized start date [Dashboard]: ",
-      normalizedStart ? normalizedStart.format("YYYY-MM-DD") : "null"
-    );
-    console.debug(
-      "Normalized end date [Dashboard]: ",
-      normalizedEnd ? normalizedEnd.format("YYYY-MM-DD") : "null"
-    );
 
     if (which === "startDate") {
       if (normalizedEnd && normalizedDate.isAfter(normalizedEnd)) {
-        console.warn("Start date cannot be after end date.");
         message.warning("La fecha de inicio no puede ser posterior a la fecha de fin.", 6);
         return;
       }
       setStartDate(normalizedDate);
     } else if (which === "endDate") {
       if (normalizedStart && normalizedDate.isBefore(normalizedStart)) {
-        console.warn("End date cannot be before start date.");
         message.warning("La fecha de fin no puede ser anterior a la fecha de inicio.", 6);
         return;
       }
@@ -245,10 +230,7 @@ const DashboardPage = () => {
       getTickets(data);
       message.info("Actualizado", 3);
     }, 20000);
-    return () => {
-      clearInterval(interval); // Clean to unmount
-      message.info("Actualizado", 3);
-    };
+    return () =>  clearInterval(interval); // Clean to unmount
   }, [startDate, endDate]);
 
   useEffect(() => {
@@ -257,7 +239,13 @@ const DashboardPage = () => {
       setSalesSeller(summarized);
       //console.debug("Sales summarized by seller [Dashboard]: ", summarized);
     }
-  }, [salesTickets, sellers]);
+    if (sales && salesTickets && sellers) {
+      console.debug(" ====#####  Carga completa [Dashboard]: ");
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+    }
+  }, [salesTickets, sellers, sales]);
 
   setTimeout(() => {
     if (waitToPlot) {
@@ -365,6 +353,15 @@ const DashboardPage = () => {
           </Col>
         )}
       </Row>
+      <Modal
+        open={isLoading}
+        footer={null}
+        closable={false}
+        centered
+        bodyStyle={{ textAlign: "center" }}
+      >
+        <Spin size="large" tip="Cargando datos..." />
+      </Modal>
     </div>
   );
 };
