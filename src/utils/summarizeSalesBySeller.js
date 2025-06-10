@@ -7,7 +7,7 @@
  */
 export const summarizeSalesBySeller = (salesTickets, sellersData) => {
   const sellerSummaryMap = {};
-  console.debug("======Summarizing sales by seller...", sellersData);
+  //console.debug("======Summarizing sales by seller...", sellersData);
   // Create a map of sellerId → name for quick lookup
   const sellerNameMap = sellersData.reduce((map, seller) => {
     map[seller.id] = seller.username;

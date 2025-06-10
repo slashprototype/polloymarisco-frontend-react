@@ -37,7 +37,7 @@ const options = {
 };
 
 const ChartMoreSell = (props) => {
-  //console.debug("Props received [chartMoreSell]: ", props);
+  console.debug("Props received [chartMoreSell]: ", props);
   const topProducts = props.sales
     ? props.sales.details
         .map((p) => ({
@@ -128,7 +128,7 @@ const ChartMoreSell = (props) => {
     ],
   };
   //console.debug('Result products [chartMoreSell]: ', resultProducts);
-  console.debug("Sellers map [chartMoreSell]: ", sellersMap);
+  //console.debug("Sellers map [chartMoreSell]: ", sellersMap);
 
   // * Receive data from parent to plot and sync with Date picker
   const handleEndMonthChange = (e) => {
@@ -138,6 +138,51 @@ const ChartMoreSell = (props) => {
       setSelectedStartMonth(newEnd);
     }
   };
+  const weeklySalesChart = () => {
+    const chartData = {
+      labels: props.weeklySales.map((item) => item.weekLabel), // Ej: Semana 1, Semana 2...
+      datasets: [
+        {
+          label: "Venta Total (MXN)",
+          data: props.weeklySales.map((item) => item.total_amount),
+          backgroundColor: "rgba(75, 192, 192, 0.6)",
+        },
+/*         {
+          label: "Total de Productos",
+          data: props.weeklySales.map((item) => item.total_items),
+          backgroundColor: "rgba(153, 102, 255, 0.6)",
+        }, */
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "top",
+        },
+        tooltip: {
+          mode: "index",
+          intersect: false,
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 100,
+          },
+        },
+      },
+    };
+
+    return (
+      <div style={{ width: "120%", height: "300px", margin: "4px",  minWidth: "300px", }}>
+        <h4 style={{ textAlign: "center" }}>Ventas Semanales (últimas 7 semanas)</h4>
+        <Bar data={chartData} options={options} />
+      </div>
+    );
+  }
   // Convertir el map a un array de gráficos
   const sellerCharts = Object.entries(sellersMap).map(([sellerId, counts]) => {
     const chartData = {
@@ -158,6 +203,8 @@ const ChartMoreSell = (props) => {
     );
   });
 
+
+
   return (
     <div className="chart-container">
       <div style={{ width: "500px", height: "290px" }}>
@@ -174,10 +221,12 @@ const ChartMoreSell = (props) => {
       >
         {sellerCharts}{" "}
       </div>
+      { weeklySalesChart()}
       <TopProductsChart
         title="Top productos más y menos vendidos (Kg)"
         mostSold={resultProducts.weight_based.topMostSold}
         leastSold={resultProducts.weight_based.topLeastSold}
+      
       />
       <TopProductsChart
         title="Top productos más y menos vendidos (Piezas)"

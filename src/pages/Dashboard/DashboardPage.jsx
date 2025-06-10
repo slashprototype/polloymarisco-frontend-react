@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 import { useOutletContext } from "react-router-dom";
 
@@ -17,6 +17,7 @@ import {
   Statistic,
   Spin,
   Descriptions,
+  message,
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -64,10 +65,11 @@ const DashboardPage = () => {
 
   const [waitToPlot, setWaitToPlot] = useState(true);
 
-  const [startDate, setStartDate] = useState(dayjs());
+  const [startDate, setStartDate] = useState(dayjs().startOf("day"));
   const [salesSeller, setSalesSeller] = useState([]);
-  const [endDate, setEndDate] = useState(dayjs());
+  const [endDate, setEndDate] = useState(dayjs().startOf("day"));
   const [sales, setSales] = useState();
+  const [weeklySales, setWeeklySales] = useState(); // tiempo de venta
   const [totalAmount, setTotalAmount] = useState(0); // total sells
   const [salesTickets, setSalesTickets] = useState();
 
@@ -75,31 +77,81 @@ const DashboardPage = () => {
     updateSharedData("Updated Data");
   };
 
-  const handleChangeDate = (which, date, dateString) => {
-    let dateFormat;
-    if (date !== null) {
-      const year = date.year();
-      const month = date.month(); // 👈 IMPORTANTE: sumar 1
-      const day = date.date();
-      dateFormat = `${year}-${month}-${day}`;
-    }
+  const handleChangeDate = (which, date) => {
+    if (!date || !dayjs(date).isValid()) return;
+
+    const normalizedDate = dayjs(date).startOf("day");
+    const normalizedStart = startDate ? dayjs(startDate).startOf("day") : null;
+    const normalizedEnd = endDate ? dayjs(endDate).startOf("day") : null;
+    console.debug("Normalized date [Dashboard]: ", normalizedDate.format("YYYY-MM-DD"));
+    console.debug(
+      "Normalized start date [Dashboard]: ",
+      normalizedStart ? normalizedStart.format("YYYY-MM-DD") : "null"
+    );
+    console.debug(
+      "Normalized end date [Dashboard]: ",
+      normalizedEnd ? normalizedEnd.format("YYYY-MM-DD") : "null"
+    );
+
     if (which === "startDate") {
-      setStartDate(date);
+      if (normalizedEnd && normalizedDate.isAfter(normalizedEnd)) {
+        console.warn("Start date cannot be after end date.");
+        message.warning("La fecha de inicio no puede ser posterior a la fecha de fin.", 6);
+        return;
+      }
+      setStartDate(normalizedDate);
     } else if (which === "endDate") {
-      setEndDate(date);
+      if (normalizedStart && normalizedDate.isBefore(normalizedStart)) {
+        console.warn("End date cannot be before start date.");
+        message.warning("La fecha de fin no puede ser anterior a la fecha de inicio.", 6);
+        return;
+      }
+      setEndDate(normalizedDate);
     }
   };
   const getSales = async (params) => {
     try {
       let data = await getSalesSummary(params);
-      //console.debug("Response products summary [Dashboard]: ", data);
+
       setSales(data);
       setTotalAmount(data.total_amount);
+
       //! Se esta generando problema al hacer el setSales
-      //console.debug("Sales [Dashboard]:", sales);
-      //setProductSells(sales.details);
     } catch (error) {
       console.error("Failed to get sales summary [Dashboard]:", error);
+    }
+  };
+
+  const getWeeklyRanges = (endDate, weeks = 7) => {
+    const ranges = [];
+    let end = dayjs(endDate).endOf("week");
+
+    for (let i = 0; i < weeks; i++) {
+      const start = end.subtract(6, "day");
+      ranges.unshift({
+        startDate: start.format("YYYY-MM-DD"),
+        endDate: end.format("YYYY-MM-DD"),
+      });
+      end = start.subtract(1, "day");
+    }
+    return ranges;
+  };
+
+  const fetchWeeklySales = async (endDate) => {
+    const ranges = getWeeklyRanges(endDate);
+    try {
+      const requests = ranges.map((range) =>
+        getSalesSummary({ startDate: range.startDate, endDate: range.endDate })
+      );
+      const results = await Promise.all(requests);
+      return results.map((res, i) => ({
+        ...res,
+        weekLabel: `Semana ${i + 1}`,
+        range: ranges[i],
+      }));
+    } catch (error) {
+      console.error("Error fetching weekly sales:", error);
+      return [];
     }
   };
 
@@ -128,20 +180,82 @@ const DashboardPage = () => {
   }, [isMobile]);
 
   useEffect(() => {
-    const data = {
-      startDate: formatDate(startDate),
-      endDate: formatDate(endDate),
-      from: "DashboardPage",
+    const interval = setInterval(() => {
+      const data = {
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+        from: "DashboardPage",
+      };
+      const weeksAgo = startDate.subtract(1, "week");
+      const week2Ago = weeksAgo.subtract(1, "week");
+      const week3Ago = week2Ago.subtract(1, "week");
+      const week4Ago = week3Ago.subtract(1, "week");
+      const week5Ago = week4Ago.subtract(1, "week");
+      const week6Ago = week5Ago.subtract(1, "week");
+      const week7Ago = week6Ago.subtract(1, "week");
+
+      const windowSales = {
+        startDate: formatDate(weeksAgo),
+        endDate: formatDate(endDate),
+        from: "DashboardPage",
+      };
+      const week1Sales = {
+        startDate: formatDate(startDate),
+        endDate: formatDate(weeksAgo),
+        from: "DashboardPage",
+      };
+      const week2Sales = {
+        startDate: formatDate(week2Ago),
+        endDate: formatDate(weeksAgo),
+        from: "DashboardPage",
+      };
+      const week3Sales = {
+        startDate: formatDate(week3Ago),
+        endDate: formatDate(week2Ago),
+        from: "DashboardPage",
+      };
+      const week4Sales = {
+        startDate: formatDate(week4Ago),
+        endDate: formatDate(week3Ago),
+        from: "DashboardPage",
+      };
+      const week5Sales = {
+        startDate: formatDate(week5Ago),
+        endDate: formatDate(week4Ago),
+        from: "DashboardPage",
+      };
+      const week6Sales = {
+        startDate: formatDate(week6Ago),
+        endDate: formatDate(week5Ago),
+        from: "DashboardPage",
+      };
+      const week7Sales = {
+        startDate: formatDate(week7Ago),
+        endDate: formatDate(week6Ago),
+        from: "DashboardPage",
+      };
+      const getWindow = async () => {
+        const data = await fetchWeeklySales(endDate);
+        setWeeklySales(data);
+      };
+
+      getWindow();
+
+      getSales(data);
+      getTickets(data);
+      message.info("Actualizado", 3);
+    }, 20000);
+    return () => {
+      clearInterval(interval); // Clean to unmount
+      message.info("Actualizado", 3);
     };
-    getSales(data);
-    getTickets(data);
   }, [startDate, endDate]);
 
   useEffect(() => {
     if (salesTickets && sellers) {
       const summarized = summarizeSalesBySeller(salesTickets, sellers);
       setSalesSeller(summarized);
-      console.debug("Sales summarized by seller [Dashboard]: ", summarized);
+      //console.debug("Sales summarized by seller [Dashboard]: ", summarized);
     }
   }, [salesTickets, sellers]);
 
@@ -157,7 +271,6 @@ const DashboardPage = () => {
     }
   }, 2000);
 
-  //console.debug("Tickets sales [Dashboard]: ", salesTickets);
   return (
     <div>
       <h3>Dashboard Page</h3>
@@ -179,7 +292,7 @@ const DashboardPage = () => {
             }}
           >
             {!isMinimized && (
-              <div>
+              <div style={{ textAlign: "center", padding: "2px" }}>
                 <h4 style={{ marginBottom: "-4px" }}>Venta total</h4>
                 <Statistic
                   value={totalAmount}
@@ -187,28 +300,26 @@ const DashboardPage = () => {
                 />
                 <h5 style={{ marginBottom: "1px" }}>Fecha inicio</h5>
                 <DatePicker
-                  //onChange={onSelectDate}
                   value={startDate}
-                  onChange={setStartDate}
+                  onChange={(date) => handleChangeDate("startDate", date)}
                 />
                 <h5 style={{ marginBottom: "1px" }}>Fecha fin</h5>
                 <DatePicker
-                  //onChange={onSelectDate}
                   value={endDate}
-                  onChange={(date) => handleChangeDate("endDate", date, date)}
+                  onChange={(date) => handleChangeDate("endDate", date)}
                 />
-   
-                <div style={{ paadding: "2px" }}>
+                <div style={{ padding: "2px" }}>
                   {salesSeller.map((sellerData) => (
                     <div>
                       <Divider style={{ marginBottom: "0px" }}>
-                       <Text strong>{sellerData.sellerName} </Text> 
+                        <Text strong>{sellerData.sellerName} </Text>
                       </Divider>
-                      
                       <Text strong>Total Venta: </Text>
                       {formatter.format(sellerData.totalAmount)} <br />
                       <Text strong>Total Kilos: </Text>
-                      {sellerData.totalKilos.toFixed(3)} kg
+                      {sellerData.totalKilos.toFixed(3)} kg <br />
+                      <Text strong>Total Unidades: </Text>
+                      {sellerData.totalUnits} <br />
                     </div>
                   ))}
                 </div>
@@ -220,7 +331,8 @@ const DashboardPage = () => {
               onClick={() => setIsMinimized(!isMinimized)}
               style={{
                 right: isMobile ? "20px" : "10px",
-                bottom: isMobile ? "20px" : "10px",
+                top: isMobile ? "20px" : "10px",
+                marginTop: isMobile ? "50px" : "100px",
               }}
               tooltip={isMinimized ? "Expandir" : "Minimizar"}
             />
@@ -229,15 +341,27 @@ const DashboardPage = () => {
       </Row>
       <br /> <br />
       <Row span={20}>
-        {!waitToPlot && (
+        {!waitToPlot ? (
           <Col span={12}>
             {sales !== undefined && salesTickets !== undefined && sellers !== undefined ? (
-              <ChartMoreSell sales={sales} salesTickets={salesTickets} sellers={sellers} />
+              <ChartMoreSell
+                sales={sales}
+                salesTickets={salesTickets}
+                sellers={sellers}
+                weeklySales={[...weeklySales].reverse()}
+              />
             ) : (
               <div style={{ textAlign: "center", padding: "20px" }}>
                 <Spin type="secondary">Cargando gráfico de ventas...</Spin>
               </div>
             )}
+          </Col>
+        ) : (
+          <Col span={12}>
+            <div style={{ textAlign: "center", padding: "20px", margin: "20px" }}>
+              <h4 style={{ marginBottom: "4px" }}>Cargando ...</h4>
+              <Spin size="large" type="secondary" tip="Cargando gráfico de ventas..."></Spin>
+            </div>
           </Col>
         )}
       </Row>

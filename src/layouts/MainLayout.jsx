@@ -149,6 +149,8 @@ const MainLayoutComponent = () => {
             style={{
               backgroundColor: ' #f1ede2', // fondo personalizado
               color: '#rgb(71, 56, 17)',              // color del texto
+              fontWeight: 'bold',
+              fontSize: '18px',
             }}
           onClick={(e) => {
             //console.debug("Click", e);
@@ -175,7 +177,7 @@ const MainLayoutComponent = () => {
               </Button> */}
             </Col>
             <Col span={4} style={{ textAlign: "right" }}>
-              <Button type="primary" style={{ margin: "10px" }} onClick={onExit}>
+              <Button color="danger" variant="solid" style={{ margin: "10px" }} onClick={onExit}>
                 Salir
               </Button>
               
